@@ -14,16 +14,26 @@ def getVocalCommand():
     res = requests.get("http://localhost:8000/voice")
     print("vocal receive")
     return res.json()
-getMeteoSimple(47.594246,0.465222)
+#getMeteoSimple(47.594246,0.465222)
 if(st.button("Clic")):
     "Parlez"
     commande = getVocalCommand()
     st.write(f"Votre commande : {commande}")
-    extraction = requests.get("http://localhost:8000/ner",params={"text":commande}).json()
-    "Extraction"
-    extraction
+    requete = requests.get("http://localhost:8000/predictS",params={"text":commande})
+    "Prediction"
+    reqJson = requete.json()
+    st.write(reqJson)
+    st.write(f"{type(reqJson)}")
+    for value , keys in reqJson.items():
+        st.write(f"{keys} : {type(value)}") 
     "Fini"
 
 ecritecom = st.text_input("Commande écrite")
 if(st.button("Ecrit")):
-    print(extraction = requests.get("http://localhost:8000/ner",params={"text":ecritecom}))
+    extraction = requests.get("http://localhost:8000/predictS",params={"text":ecritecom})
+    print(extraction.json())
+    st.write(extraction.json())
+
+if(st.button("Meteo")):
+    requete = requests.get("http://localhost:8000/meteo")
+    st.write(requete.json())

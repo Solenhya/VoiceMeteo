@@ -38,12 +38,18 @@ def getMeteoDataDaily(latitude,longitude,dailyReq,days=4):
         retour[colName]=daily.Variables(i).ValuesAsNumpy()
     return retour
 
-def GetMeteoDailyRange(longitude,latitude,dailyReq,minRange,maxRange):
-    data = getMeteoDataDaily(longitude,latitude,dailyReq,days=maxRange)
+def GetMeteoDailyRange(latitude,longitude,dailyReq,minRange,maxRange):
+    data = getMeteoDataDaily(latitude,longitude,dailyReq,days=maxRange)
     return data[minRange:]
 
+listeDaily = ["precipitation_probability_mean","temperature_2m_min","temperature_2m_max","weather_code"]
 
+def GetMeteoDailyDay(latitude,longitude,timedelta):
+    data = getMeteoDataDaily(latitude,longitude,listeDaily,timedelta+1)
 
+    # Select the entire row as numpy arrays (keep the numpy array for each column)
+    selected_row = {col: values[timedelta:timedelta+1] for col, values in data.items()}
+    return selected_row
 
 # Make sure all required weather variables are listed here
 # The order of variables in hourly or daily is important to assign them correctly below
@@ -56,7 +62,7 @@ params = {
     "daily":"precipitation_probability_mean"
 }
 
-listeDaily = ["precipitation_probability_mean","temperature_2m_min","temperature_2m_max","weather_code"]
+
 
 #meteo = getMeteoDataDaily(0,47,listeDaily)
 
