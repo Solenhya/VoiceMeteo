@@ -7,11 +7,12 @@ dotenv.load_dotenv()
 print("Setting configuration voice")
 speech_config = speechsdk.SpeechConfig(subscription=os.getenv('SPEECH_KEY'), region=os.getenv('SPEECH_REGION'))
 speech_config.speech_recognition_language="fr-FR"
-audio_config = speechsdk.audio.AudioConfig(use_default_microphone=True)
-speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_config)
 print("Setting done")
 
 def recognize_from_microphone():
+
+    audio_config = speechsdk.audio.AudioConfig(use_default_microphone=True)
+    speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_config)
     speech_recognition_result = speech_recognizer.recognize_once_async().get()
 
     if speech_recognition_result.reason == speechsdk.ResultReason.RecognizedSpeech:
@@ -26,3 +27,9 @@ def recognize_from_microphone():
             print("Error details: {}".format(cancellation_details.error_details))
             print("Did you set the speech resource key and region values?")
 
+def recognize_from_file(filepath):
+    audio_config = speechsdk.audio.AudioConfig(filename=filepath)
+    speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_config)
+    speech_recognition_result = speech_recognizer.recognize_once_async().get()
+    return speech_recognition_result.text
+    #TODO handle error

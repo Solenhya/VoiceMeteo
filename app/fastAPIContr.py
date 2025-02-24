@@ -1,7 +1,8 @@
 import meteorequest
 import voice
 import dataParse
-from fastapi import FastAPI
+from fastapi import FastAPI , File , UploadFile
+import tempfile
 
 from json import JSONEncoder
 import json
@@ -47,6 +48,11 @@ def predictionSimple(info):
     retour = meteorequest.GetMeteoDailyDay(loc["latitude"],loc["longitude"],difference)
     return retour
 
+def predictionAll(info):
+    loc = info["loc"][0]
+    if(len(info["date"]>1)):
+        pass
+
 
 @app.get("/")
 def read_root(x=None):
@@ -91,3 +97,28 @@ def prediction(text):
     retour["date"]=[str(info["date"])]
     retour = json.dumps(retour,cls=NumpyArrayEncoder)
     return retour
+
+@app.get("/predictA")
+def PredictAll(text):
+    try:
+        ner = NerTransform.GetInfoAll(text)
+    except:
+        print("Erreur lors du Ner")
+    finally:
+        info = dataParse.parseAll(ner)
+        if(info["status"]=="Success"):
+            lo
+        else:
+            print("Erreur lors du parsing")
+
+#Essai fonction fastAPi qui a besoin de react
+@app.post("/upload")
+async def upload_audio(file: UploadFile = File(...)):
+    # Save the file temporarily
+    file_path = f"temp_audio.wav"
+    with open(file_path, "wb") as buffer:
+        buffer.write(await file.read())
+
+    transcript = voice.recognize_from_file("temp_audio.wav")
+
+    return {"transcription": transcript}

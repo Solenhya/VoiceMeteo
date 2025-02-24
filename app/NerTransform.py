@@ -30,7 +30,7 @@ def GetInfoOne(text):
     retour = GetNer(text)
     info = ExtractInfoFromNer(retour)
     if(len(info["date"])>0 and len(info["loc"])>0):
-        return {"date":info["date"][0],"loc":info["loc"][0]}
+        return {"date":[info["date"][0]],"loc":[info["loc"][0]]}
     else : 
         return None
     
