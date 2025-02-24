@@ -17,10 +17,18 @@ def result_range():
     return{"date":[dateparser.parse("vendredi",settings={'PREFER_DATES_FROM': 'future'}),dateparser.parse("samedi",settings={'PREFER_DATES_FROM': 'future'})],"latitude":47.395476,"longitude":0.694273}
 
 @pytest.mark.integration
-@pytest.mark.parametrize("listeDate,min,max",
+@pytest.mark.parametrize("listeDate,minV,maxV",
                          [
-                             ([datetime.datetime()])
+                             ([datetime.datetime(2017, 12, 27, 0, 0),datetime.datetime(2017, 12, 29, 0, 0)],1,4),
+                             ([datetime.datetime(2017,12,28,0,0),datetime.datetime(2017,12,26,0,0)],2,7)
                          ])
+def testRange(monkeypatch,listeDate,minV,maxV):
+    def monk_getDiff(date):
+        return date-datetime.datetime(2017, 12, 26, 0, 0)
+    monkeypatch.setattr("dataParse.getDifference",monk_getDiff)
+    min,max = dataParse.GetDateRange(listeDate)
+    assert min == minV
+    assert max == maxV
 
 
 @pytest.mark.integration

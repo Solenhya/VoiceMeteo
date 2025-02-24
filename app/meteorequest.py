@@ -38,11 +38,14 @@ def getMeteoDataDaily(latitude,longitude,dailyReq,days=4):
         retour[colName]=daily.Variables(i).ValuesAsNumpy()
     return retour
 
-def GetMeteoDailyRange(latitude,longitude,dailyReq,minRange,maxRange):
-    data = getMeteoDataDaily(latitude,longitude,dailyReq,days=maxRange)
-    return data[minRange:]
+
 
 listeDaily = ["precipitation_probability_mean","temperature_2m_min","temperature_2m_max","weather_code"]
+
+def GetMeteoDailyRange(latitude,longitude,minRange,maxRange):
+    data = getMeteoDataDaily(latitude,longitude,listeDaily,days=maxRange)
+    data = pd.DataFrame(data)
+    return data[minRange:]
 
 def GetMeteoDailyDay(latitude,longitude,timedelta):
     data = getMeteoDataDaily(latitude,longitude,listeDaily,timedelta+1)

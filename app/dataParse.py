@@ -4,17 +4,19 @@ import datetime
 
 def GetDateRange(listedate):
     if(len(listedate)==1):
-        difference = listedate[0]-datetime.datetime.now()
+        difference = getDifference(listedate[0])
         min = difference
         max = difference+1
         return(min,max)
-    diffUn = listedate[0]-datetime.datetime.now()
-    diffDeux = listedate[1]-datetime.datetime.now()
+    diffUn = getDifference(listedate[0])
+    diffDeux = getDifference(listedate[1])
     if(diffDeux>diffUn):
         return(diffUn,diffDeux+1)
     else:
         return(diffUn,diffDeux+8)
 
+def getDifference(date):
+    return (date-datetime.datetime.now()).days
 
 def getDateSplit(text):
     #pour retirer les artefact ou dateparser attribut des valeurs étranges a des mots de liaison
@@ -23,7 +25,9 @@ def getDateSplit(text):
     split = str.split(text)
     for cur in split:
         if(cur not in regular):
-            retour.append(dateparser.parse(cur,settings={'PREFER_DATES_FROM': 'future'}))
+            parse = dateparser.parse(cur,settings={'PREFER_DATES_FROM': 'future'})
+            if(parse!=None):
+                retour.append(dateparser.parse(cur,settings={'PREFER_DATES_FROM': 'future'}))
     return retour
 
 def getLL(localisation):

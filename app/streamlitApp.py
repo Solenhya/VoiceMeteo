@@ -30,10 +30,11 @@ if(st.button("Clic")):
 
 ecritecom = st.text_input("Commande écrite")
 if(st.button("Ecrit")):
-    extraction = requests.get("http://localhost:8000/predictS",params={"text":ecritecom})
+    extraction = requests.get("http://localhost:8000/predictA",params={"text":ecritecom})
     print(extraction.json())
+    data = pd.DataFrame(json.loads(extraction.json()))
+    st.dataframe(data)
     st.write(extraction.json())
-
 if(st.button("Meteo")):
     requete = requests.get("http://localhost:8000/meteo")
     st.write(requete.json())

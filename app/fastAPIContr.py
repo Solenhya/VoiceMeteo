@@ -50,9 +50,12 @@ def predictionSimple(info):
 
 def predictionAll(info):
     loc = info["loc"][0]
-    if(len(info["date"]>1)):
-        pass
-
+    print(f"Date = {info['date']}")
+    min,max = dataParse.GetDateRange(info["date"])
+    print(f"Min day = {min}")
+    print(f"Max day = {max}")
+    retour = meteorequest.GetMeteoDailyRange(loc["latitude"],loc["longitude"],min,max)
+    return retour
 
 @app.get("/")
 def read_root(x=None):
@@ -107,7 +110,13 @@ def PredictAll(text):
     finally:
         info = dataParse.parseAll(ner)
         if(info["status"]=="Success"):
-            lo
+            prediction=predictionAll(info)
+            prediction["weather_code"] = [ReplaceCode(x) for x in prediction["weather_code"]]
+            retour = prediction
+            #retour["date"]=[str(info["date"])]
+            retour = retour.to_dict(orient="list")
+            retour = json.dumps(retour,cls=NumpyArrayEncoder)
+            return retour
         else:
             print("Erreur lors du parsing")
 
