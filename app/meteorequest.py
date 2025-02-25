@@ -9,6 +9,8 @@ cache_session = requests_cache.CachedSession('.cache', expire_after = 3600)
 retry_session = retry(cache_session, retries = 5, backoff_factor = 0.2)
 openmeteo = openmeteo_requests.Client(session = retry_session)
 
+
+
 def getMeteoDataDaily(latitude,longitude,dailyReq,days=4):
     url = "https://api.open-meteo.com/v1/forecast"
     params = {
@@ -26,13 +28,25 @@ def getMeteoDataDaily(latitude,longitude,dailyReq,days=4):
 
     daily = response.Daily()
     
-    #retour = {"date": pd.date_range(
-	#start = pd.to_datetime(daily.Time(), unit = "s", utc = True),
-	#end = pd.to_datetime(daily.TimeEnd(), unit = "s", utc = True),
-	#freq = pd.Timedelta(seconds=daily.Interval()),
+    #Creer un datetimeindex correspondant a l'intervalle entre le début et la fin de la prédiction
+    retour = {"date": pd.date_range(
+	start = pd.to_datetime(daily.Time(), unit = "s", utc = True),
+	end = pd.to_datetime(daily.TimeEnd(), unit = "s", utc = True),
+	freq = pd.Timedelta(seconds=daily.Interval()),
 	#inclusive = "left"
-    #)}
-    retour = {}
+    )}
+
+    #Extrait les jours et les mois 
+    retour["days"]=retour["date"].day.tolist()
+    retour["months"]=retour["date"].month.to_list()
+    
+    #Coupe si on a un jour en trop
+    retour["days"]=retour["days"][:16]
+    retour["months"]=retour["months"][:16]
+
+    retour.pop("date",None)
+
+    #Rajoute dans le dictionnaire toute les variables selecionner
     for i in range(len(dailyReq)):
         colName = dailyReq[i]
         retour[colName]=daily.Variables(i).ValuesAsNumpy()
@@ -41,36 +55,21 @@ def getMeteoDataDaily(latitude,longitude,dailyReq,days=4):
 
 
 listeDaily = ["precipitation_probability_mean","temperature_2m_min","temperature_2m_max","weather_code"]
+maxdays = 16
+def GetMeteoInfo(latitude,longitude):
+    data = getMeteoDataDaily(latitude,longitude,listeDaily,days=maxdays)
+    return data
 
-def GetMeteoDailyRange(latitude,longitude,minRange,maxRange):
-    data = getMeteoDataDaily(latitude,longitude,listeDaily,days=maxRange)
+#Prend une latitude,longitude et une liste de date formater et renvoi une liste de dataframe qui correspondents
+def GetMeteoDay(latitude,longitude,days):
+    data = GetMeteoInfo(latitude,longitude)
     data = pd.DataFrame(data)
-    return data[minRange:]
+    retour = []
 
-def GetMeteoDailyDay(latitude,longitude,timedelta):
-    data = getMeteoDataDaily(latitude,longitude,listeDaily,timedelta+1)
+    #TODO gerer le cas la date est dans le passé ou trop loin dans le futur ( faire un retour special)
+    for dateF in days:
+        df_filtered = data[data.apply(lambda row: dateF.Correspond(row['days'], row['months']), axis=1)]
+        retour.append(df_filtered)
+    return retour
 
-    # Select the entire row as numpy arrays (keep the numpy array for each column)
-    selected_row = {col: values[timedelta:timedelta+1] for col, values in data.items()}
-    return selected_row
-
-# Make sure all required weather variables are listed here
-# The order of variables in hourly or daily is important to assign them correctly below
-url = "https://api.open-meteo.com/v1/forecast"
-params = {
-	"latitude": 47.3948,
-	"longitude": 0.704,
-	"hourly": "temperature_2m,cloud_cover,precipitation_probability",
-    "forecast_days":16,
-    "daily":"precipitation_probability_mean"
-}
-
-
-
-#meteo = getMeteoDataDaily(0,47,listeDaily)
-
-#print(meteo)
-
-
-def GetMeteoDailySimple(latitude,longitude):
-    return getMeteoDataDaily(latitude,longitude,listeDaily)
+    

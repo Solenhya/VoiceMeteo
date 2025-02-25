@@ -57,6 +57,7 @@ def predictionAll(info):
     retour = meteorequest.GetMeteoDailyRange(loc["latitude"],loc["longitude"],min,max)
     return retour
 
+
 @app.get("/")
 def read_root(x=None):
     '''
@@ -78,14 +79,42 @@ def getMeteo(longitude=0,latitude=0):
 
 @app.get("/voice")
 def getVoice():
-    return voice.recognize_from_microphone()
-
-@app.get("/ner")
-def getNer(text):
-    ner = NerTransform.GetInfoOne(text)
-    print(f"NER done : {ner}")
-    retour = dataParse.parseSingleData(ner)
+    retour = voice.recognize_from_microphone()
+    #if retour pas bon
     return retour
+
+@app.get("/nerInfo")
+def getNer(text):
+    ner = NerTransform.GetInfoAll(text)
+    print(f"NER done : {ner}")
+    retour = dataParse.parseAll(ner)
+    if(retour["status"]!="Success"):
+        pass
+        #TODO pour monitoring
+    return retour
+
+#Une fonction pour creer la requete au service météo
+#@app.post("/meteoFromNer") Erreur avec le transfert en requete du resultat du ner
+
+def ExtractFirstMeteo(info):
+    print(info)
+    if(len(info["loc"])==0):
+        print("Erreur localisation")
+        return
+        #TODO monitoring
+    if(len(info["date"])==0):
+        print("Erreur date")
+        return
+        #TODO monitoring
+    #Choix du premier 
+    loc = info["loc"][0]
+    dates = info["date"][0]
+    meteoReq = meteorequest.GetMeteoDay(loc["latitude"],loc["longitude"],[dates])
+    if(len(meteoReq)==0):
+        print("Meteo vide")
+        return
+        ##TODO cas ou les date n'était pas correct
+    return meteoReq[0]
 
 @app.get("/predictS")
 def prediction(text):
@@ -103,6 +132,10 @@ def prediction(text):
 
 @app.get("/predictA")
 def PredictAll(text):
+    ner = getNer(text)
+    retour= ExtractFirstMeteo(ner)
+    retour["weather_code"]=retour["weather_code"].apply(ReplaceCode)
+    return retour.to_dict()
     try:
         ner = NerTransform.GetInfoAll(text)
     except:

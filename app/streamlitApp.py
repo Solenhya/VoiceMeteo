@@ -3,6 +3,9 @@ import requests
 import pandas as pd
 import json
 
+
+debugMode = False
+
 def getMeteoSimple(latitude,longitude):
     res = requests.get("http://localhost:8000/meteo",params={"latitude":latitude,"longitude":longitude})
     print("status /meteo",res.status_code)
@@ -30,11 +33,14 @@ if(st.button("Clic")):
 
 ecritecom = st.text_input("Commande écrite")
 if(st.button("Ecrit")):
-    extraction = requests.get("http://localhost:8000/predictA",params={"text":ecritecom})
-    print(extraction.json())
-    data = pd.DataFrame(json.loads(extraction.json()))
+    ner = requests.get("http://localhost:8000/nerInfo",params={"text":ecritecom})
+    if(debugMode):
+        st.write(ner)
+        st.write(ner.json())
+        st.write(type(ner.json()))
+    prediction = requests.get("http://127.0.0.1:8000/predictA",params={"text":ecritecom})
+    if(debugMode):
+        st.write(prediction)
+        st.write(prediction.json())
+    data = pd.DataFrame(prediction.json())
     st.dataframe(data)
-    st.write(extraction.json())
-if(st.button("Meteo")):
-    requete = requests.get("http://localhost:8000/meteo")
-    st.write(requete.json())
