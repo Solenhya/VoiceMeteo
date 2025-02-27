@@ -1,4 +1,4 @@
-import NerTransform
+import VoiceMeteo.app.services.NerTransform as NerTransform
 import pytest
 
 @pytest.mark.integration

@@ -1,4 +1,4 @@
-import dataParse
+import VoiceMeteo.app.services.dataParse as dataParse
 import datetime
 import pytest
 import dateparser

@@ -97,14 +97,6 @@ def parseAll(info):
     retour={"date":None,"loc":None,"status":""}
     dateOk = True
     locOK = True
-
-    if(len(info["date"])==0):
-        #TODO regarder le texte pour voir si il n'y a pas des oublie
-        pass
-    if(len(info["loc"])==0):
-        #TODO traiter les cas ou on a pas trouver de localisation
-        pass
-
     retour["date"]=[]
     TraiteDate(info, retour)
     if(len(retour["date"])==0):

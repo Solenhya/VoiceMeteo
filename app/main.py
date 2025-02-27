@@ -1,10 +1,8 @@
-import meteorequest
-import voice
-import dataParse
+import VoiceMeteo.app.services.meteorequest as meteorequest
+import VoiceMeteo.app.services.voice as voice
+import VoiceMeteo.app.services.dataParse as dataParse
 from fastapi import FastAPI , File , UploadFile
-import tempfile
 from pydub import AudioSegment
-
 
 from json import JSONEncoder
 import json
@@ -41,23 +39,7 @@ def ReplaceCode(code):
 
 app = FastAPI()
 
-import NerTransform
-
-
-def predictionSimple(info):
-    difference = info["difference"]
-    loc = info["loc"]
-    retour = meteorequest.GetMeteoDailyDay(loc["latitude"],loc["longitude"],difference)
-    return retour
-
-def predictionAll(info):
-    loc = info["loc"][0]
-    print(f"Date = {info['date']}")
-    min,max = dataParse.GetDateRange(info["date"])
-    print(f"Min day = {min}")
-    print(f"Max day = {max}")
-    retour = meteorequest.GetMeteoDailyRange(loc["latitude"],loc["longitude"],min,max)
-    return retour
+import VoiceMeteo.app.services.NerTransform as NerTransform
 
 
 @app.get("/")
@@ -121,32 +103,16 @@ def ExtractFirstMeteo(info):
 @app.get("/predictA")
 def PredictAll(text):
     ner = getNer(text)
-
     if(ner==None):
+        #TODO gerer et monitorer l'erreur
         return None
     retour= ExtractFirstMeteo(ner)
     retour["weather_code"]=retour["weather_code"].apply(ReplaceCode)
     return retour.to_dict()
-    try:
-        ner = NerTransform.GetInfoAll(text)
-    except:
-        print("Erreur lors du Ner")
-    finally:
-        info = dataParse.parseAll(ner)
-        if(info["status"]=="Success"):
-            prediction=predictionAll(info)
-            prediction["weather_code"] = [ReplaceCode(x) for x in prediction["weather_code"]]
-            retour = prediction
-            #retour["date"]=[str(info["date"])]
-            retour = retour.to_dict(orient="list")
-            retour = json.dumps(retour,cls=NumpyArrayEncoder)
-            return retour
-        else:
-            print("Erreur lors du parsing")
 
 
 
-#Essai fonction fastAPi qui a besoin de react
+#Essai fonction fastAPi qui a besoin de javascript pour fonctionner
 @app.post("/upload_audio")
 async def upload_audio(file: UploadFile = File(...)):
     # Save the file temporarily

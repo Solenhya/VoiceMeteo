@@ -8,6 +8,8 @@ NerPipeline = pipeline("ner",model=model,tokenizer=tokenizer,aggregation_strateg
 print("Modele charger")
 
 
+#Un service qui utilise un pipeline hugging face pour faire un NER et extraire toutes les date et localisation
+
 def GetNer(text):
     retour = NerPipeline(text)
     #Transform le numpy float en float
@@ -24,15 +26,15 @@ def ExtractInfoFromNer(ner):
             date.append(group["word"])
         if(group["entity_group"]=="LOC"):
             loc.append(group["word"])
+            
+    if (len(date)==0):
+        #TODO regarder le texte pour voir si il n'y a pas des oublie
+        pass
+    if len(loc)==0:
+        #TODO traiter les cas ou on a pas trouver de localisation
+        pass
     return{"date":date,"loc":loc}
-    
-def GetInfoOne(text):
-    retour = GetNer(text)
-    info = ExtractInfoFromNer(retour)
-    if(len(info["date"])>0 and len(info["loc"])>0):
-        return {"date":[info["date"][0]],"loc":[info["loc"][0]]}
-    else : 
-        return None
+
     
 def GetInfoAll(text):
     retour = GetNer(text)
