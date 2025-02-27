@@ -171,5 +171,5 @@ cython_debug/
 .pypirc
 
 # Les fichiers audio
-.wav
-.ogg
+*.wav
+*.ogg
