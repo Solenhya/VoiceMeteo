@@ -4,7 +4,7 @@ import pandas as pd
 import json
 
 
-debugMode = False
+debugMode = True
 
 def getMeteoSimple(latitude,longitude):
     res = requests.get("http://localhost:8000/meteo",params={"latitude":latitude,"longitude":longitude})

@@ -3,6 +3,8 @@ import voice
 import dataParse
 from fastapi import FastAPI , File , UploadFile
 import tempfile
+from pydub import AudioSegment
+
 
 from json import JSONEncoder
 import json
@@ -116,23 +118,12 @@ def ExtractFirstMeteo(info):
         ##TODO cas ou les date n'était pas correct
     return meteoReq[0]
 
-@app.get("/predictS")
-def prediction(text):
-    ner = NerTransform.GetInfoOne(text)
-    print(f"Ner pour prediction fait : {ner}")
-    info = dataParse.parseSingleData(ner)
-    if(info==None):
-        return "Erreur lors du traitements du text"
-    prediction = predictionSimple(info)
-    prediction["weather_code"] = [ReplaceCode(x) for x in prediction["weather_code"]]
-    retour = prediction
-    retour["date"]=[str(info["date"])]
-    retour = json.dumps(retour,cls=NumpyArrayEncoder)
-    return retour
-
 @app.get("/predictA")
 def PredictAll(text):
     ner = getNer(text)
+
+    if(ner==None):
+        return None
     retour= ExtractFirstMeteo(ner)
     retour["weather_code"]=retour["weather_code"].apply(ReplaceCode)
     return retour.to_dict()
@@ -153,14 +144,18 @@ def PredictAll(text):
         else:
             print("Erreur lors du parsing")
 
+
+
 #Essai fonction fastAPi qui a besoin de react
-@app.post("/upload")
+@app.post("/upload_audio")
 async def upload_audio(file: UploadFile = File(...)):
     # Save the file temporarily
-    file_path = f"temp_audio.wav"
+    file_path = f"temp_file.ogg"
     with open(file_path, "wb") as buffer:
         buffer.write(await file.read())
-
+    ogg_version = AudioSegment.from_ogg("temp_file.ogg")
+    ogg_version.export("temp_audio.wav", format="wav")
     transcript = voice.recognize_from_file("temp_audio.wav")
-
+    print(transcript)
     return {"transcription": transcript}
+
