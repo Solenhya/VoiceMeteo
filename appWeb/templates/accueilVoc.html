@@ -1,0 +1,89 @@
+{% extends "baseTemplates.html" %}
+
+{% block title %}
+    Fab Weather
+{% endblock %}
+
+{% block script %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const micButton = document.getElementById('micButton');
+      const micIcon = document.getElementById('micIcon');
+      let mediaRecorder;
+      let audioChunks = [];
+  
+    function switchmicBut(state,micB,micI){
+        
+    }
+
+      // Start recording when mic button is clicked
+      micButton.addEventListener('click', async () => {
+            if (mediaRecorder && mediaRecorder.state === "recording") {
+                // Stop the recording
+                mediaRecorder.stop();
+                micButton.style.color = 'blue';
+                micIcon.style.color = 'white';  // Reset button
+            } else {
+                // Start the recording
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                // When data is available, push it to audioChunks
+                mediaRecorder.ondataavailable = event => {
+                    audioChunks.push(event.data);
+                };
+
+                // When recording is stopped, send the audio file
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/ogg' });
+                    const audioFile = new File([audioBlob], 'record.ogg', { type: 'audio/ogg' });
+
+                    // Send the file to the FastAPI backend
+                    const formData = new FormData();
+                    formData.append('file', audioFile);
+
+                    // Send a POST request to your FastAPI server
+                    const response = await fetch('http://localhost:8000/upload_audio', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    if (response.ok) {
+                        console.log('Audio uploaded successfully!');
+                        console.log(await response.json())
+
+                    } else {
+                        console.error('Error uploading audio');
+                    }
+                };
+
+                mediaRecorder.start();
+                micButton.style.color = 'white';
+                micIcon.style.color = 'red';  // Change button to stop
+            }
+      });
+    });
+  </script>
+{% endblock %}
+
+{% block main %}
+
+<div class="container h-80">
+    <div class="content">
+        <h1>Fab Weather</h1>
+        <!-- Grand bouton rond centré -->
+        <button id="micButton" class="btn btn-primary btn-circle btn-block rounded-circle mb-3"><i id="micIcon" class="fs-1 bi bi-mic micIcon"></i></button>
+        
+        <!-- Texte centré -->
+        <p>Cliquez et parlez.</p>
+        <div class = "content">              
+            <!-- Petit bouton rond centré en bas -->
+            <button class="btn btn-success btn-circle btn-smaller">+</button>
+        </div>
+    </div>
+</div>
+<div class="container h-20">
+
+</div>
+
+{% endblock %}

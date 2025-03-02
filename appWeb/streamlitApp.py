@@ -17,7 +17,7 @@ def getVocalCommand():
     res = requests.get("http://localhost:8000/voice")
     print("vocal receive")
     return res.json()
-#getMeteoSimple(47.594246,0.465222)
+
 if(st.button("Clic")):
     "Parlez"
     commande = getVocalCommand()

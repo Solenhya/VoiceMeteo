@@ -92,6 +92,28 @@ def parseSingleData(info):
     info["loc"]={"latitude":lat,"longitude":long}
     return info
 
+#Traite la localisation pour renvoyer une liste de dictionnaire avec longitude et lattitude
+def TraiteLocalisation(info, retour):
+    for entre in info["loc"]:
+        ajout = getLL(entre)
+        if(ajout!=None):
+            retour["loc"].append(ajout)
+        else:
+            #TODO
+            pass
+
+#Traite les date pour renvoyer une liste de 
+def TraiteDate(info, retour):
+    for entre in info["date"]:
+        parse = dateparser.parse(entre,settings={'PREFER_DATES_FROM': 'future'})
+        #Traite le cas ou le parse ne marche pas
+        if(parse==None):
+            ajout = TraiteErreurDateParsing(entre)
+            retour["date"].extend(ajout)
+        else:
+            firstDate = {"day":parse.day,"month":parse.month}
+            retour["date"].append(DateFormatCust(firstDate=firstDate))
+
 #Fonction pour parser toute les infos
 def parseAll(info):
     retour={"date":None,"loc":None,"status":""}
@@ -116,28 +138,4 @@ def parseAll(info):
     else:
         retour["status"]="ErDate" 
     return retour
-
-#Traite la localisation pour renvoyer une liste de dictionnaire avec longitude et lattitude
-def TraiteLocalisation(info, retour):
-    for entre in info["loc"]:
-        ajout = getLL(entre)
-        if(ajout!=None):
-            retour["loc"].append(ajout)
-        else:
-            #TODO
-            pass
-
-#Traite les date pour renvoyer une liste de 
-def TraiteDate(info, retour):
-    for entre in info["date"]:
-        parse = dateparser.parse(entre,settings={'PREFER_DATES_FROM': 'future'})
-        #Traite le cas ou le parse ne marche pas
-        if(parse==None):
-            ajout = TraiteErreurDateParsing(entre)
-            retour["date"].extend(ajout)
-        else:
-            firstDate = {"day":parse.day,"month":parse.month}
-            retour["date"].append(DateFormatCust(firstDate=firstDate))
-
-
 

@@ -1,7 +1,9 @@
-import VoiceMeteo.app.services.meteorequest as meteorequest
-import VoiceMeteo.app.services.voice as voice
-import VoiceMeteo.app.services.dataParse as dataParse
+import services.meteorequest as meteorequest
+import services.voice as voice
+import services.dataParse as dataParse
+import services.NerTransform as NerTransform
 from fastapi import FastAPI , File , UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from pydub import AudioSegment
 
 from json import JSONEncoder
@@ -39,7 +41,13 @@ def ReplaceCode(code):
 
 app = FastAPI()
 
-import VoiceMeteo.app.services.NerTransform as NerTransform
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:8001"],  # The frontend URL (replace with your actual frontend URL if needed)
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allows all headers
+)
 
 
 @app.get("/")
