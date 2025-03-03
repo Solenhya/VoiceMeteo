@@ -2,9 +2,12 @@ import services.meteorequest as meteorequest
 import services.voice as voice
 import services.dataParse as dataParse
 import services.NerTransform as NerTransform
-from fastapi import FastAPI , File , UploadFile
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI , File , UploadFile , Request
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from pydub import AudioSegment
+from pydantic import BaseModel
 
 from json import JSONEncoder
 import json
@@ -40,17 +43,23 @@ def ReplaceCode(code):
         return("Code inconnue")
 
 app = FastAPI()
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:8001"],  # The frontend URL (replace with your actual frontend URL if needed)
-    allow_credentials=True,
-    allow_methods=["*"],  # Allows all HTTP methods (GET, POST, etc.)
-    allow_headers=["*"],  # Allows all headers
-)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
 
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
+async def accueil(request: Request):
+    return templates.TemplateResponse(
+        request=request, name="accueilVoc.html"
+    )
+
+@app.get("/Request",response_class=HTMLResponse)
+async def reponse(request: Request,text):
+    return templates.TemplateResponse(
+        request=request
+    )
+
+@app.get("/test")
 def read_root(x=None):
     '''
     Essai de point d'API de base...
@@ -75,8 +84,13 @@ def getVoice():
     #if retour pas bon
     return retour
 
-@app.get("/nerInfo")
-def getNer(text):
+class RequestModel(BaseModel):
+    text: str
+
+@app.post("/nerInfo")
+def getNer(request: RequestModel):
+    text = request.text
+    print(f"Ner to {text}")
     ner = NerTransform.GetInfoAll(text)
     print(f"NER done : {ner}")
     retour = dataParse.parseAll(ner)

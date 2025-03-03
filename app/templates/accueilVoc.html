@@ -9,21 +9,54 @@
     document.addEventListener('DOMContentLoaded', () => {
       const micButton = document.getElementById('micButton');
       const micIcon = document.getElementById('micIcon');
+      const textButton = document.getElementById('textBut')
       let mediaRecorder;
       let audioChunks = [];
   
-    function switchmicBut(state,micB,micI){
-        
+    function switchmicBut(state,micB,micI,medRec){
+        if(state){
+            mediaRecorder.stop();
+            micButton.style.color = 'blue';
+            micIcon.style.color = 'white'; 
+        }else{
+            mediaRecorder.start();
+            micButton.style.color = 'white';
+            micIcon.style.color = 'red';  // Change button to stop
+        }
     }
-
+    function getAudioData(audChuns) {
+        const audioBlob = new Blob(audChunks, { type: 'audio/ogg' });
+        const audioFile = new File([audioBlob], 'record.ogg', { type: 'audio/ogg' });
+        const formData = new FormData();
+        formData.append('file', audioFile);
+        return formData
+    }
+    async function getCommande(transcript) {
+        const response = await fetch('http://localhost:8000/nerInfo', {
+            method: 'POST',
+            headers: {
+            'Content-Type': 'application/json',  // Set the correct Content-Type for JSON
+            },
+            body: JSON.stringify({ "text": transcript })  // Send text as JSON
+            });
+        const data =await response.json();
+        console.log(data);  // Do something with the response data
+        console.log(data.status)
+        return data
+    }
+    async function trySwitch(data){
+        const status = data.status
+        if(status=="Success"){
+            console.log("Success")
+        }
+    }
+    textButton.addEventListener('click',async () => getCommande("Meteo de Tours de jeudi s'il te"));
       // Start recording when mic button is clicked
       micButton.addEventListener('click', async () => {
             if (mediaRecorder && mediaRecorder.state === "recording") {
-                // Stop the recording
-                mediaRecorder.stop();
-                micButton.style.color = 'blue';
-                micIcon.style.color = 'white';  // Reset button
+                switchmicBut(true,micButton,micIcon,mediaRecorder)
             } else {
+                switchmicBut(false,micButton,micIcon,mediaRecorder)
                 // Start the recording
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 mediaRecorder = new MediaRecorder(stream);
@@ -36,13 +69,7 @@
 
                 // When recording is stopped, send the audio file
                 mediaRecorder.onstop = async () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/ogg' });
-                    const audioFile = new File([audioBlob], 'record.ogg', { type: 'audio/ogg' });
-
-                    // Send the file to the FastAPI backend
-                    const formData = new FormData();
-                    formData.append('file', audioFile);
-
+                    const formData = getData(audioChunks)
                     // Send a POST request to your FastAPI server
                     const response = await fetch('http://localhost:8000/upload_audio', {
                         method: 'POST',
@@ -51,15 +78,12 @@
                     if (response.ok) {
                         console.log('Audio uploaded successfully!');
                         console.log(await response.json())
-
+                        const transcript = response.json()["transcription"];
+                        getCommande(transcript)
                     } else {
                         console.error('Error uploading audio');
                     }
                 };
-
-                mediaRecorder.start();
-                micButton.style.color = 'white';
-                micIcon.style.color = 'red';  // Change button to stop
             }
       });
     });
@@ -78,7 +102,7 @@
         <p>Cliquez et parlez.</p>
         <div class = "content">              
             <!-- Petit bouton rond centré en bas -->
-            <button class="btn btn-success btn-circle btn-smaller">+</button>
+            <button id="textBut" class="btn btn-success btn-circle btn-smaller">+</button>
         </div>
     </div>
 </div>
