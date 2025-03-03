@@ -16,16 +16,16 @@
   
     function switchmicBut(state,micB,micI,medRec){
         if(state){
-            mediaRecorder.stop();
-            micButton.style.color = 'blue';
-            micIcon.style.color = 'white'; 
+            medRec.stop();
+            micB.style.color = 'blue';
+            micI.style.color = 'white'; 
         }else{
-            mediaRecorder.start();
-            micButton.style.color = 'white';
-            micIcon.style.color = 'red';
+            medRec.start();
+            micB.style.color = 'white';
+            micI.style.color = 'red';
         }
     }
-    function getAudioData(audChuns) {
+    function getAudioData(audChunks) {
         const audioBlob = new Blob(audChunks, { type: 'audio/ogg' });
         const audioFile = new File([audioBlob], 'record.ogg', { type: 'audio/ogg' });
         const formData = new FormData();
@@ -51,9 +51,9 @@
             const firstDate = data.date[0].firstDate;
             const day = firstDate.day;
             const month = firstDate.month;
-            const latitude = data.loc[0].latitude;
-            const longitude = data.loc[0].longitude;
-            const url = `http://localhost:8000/meteo?day=${day}&month=${month}&longitude=${longitude}&latitude=${latitude}`;
+            const localisation = data.loc;
+            console.log(localisation);
+            const url = `http://localhost:8000/meteo?day=${day}&month=${month}&localisation=${localisation}`;
             window.location.href = url;
         }else{
             textInfo.innerHTML="Erreur dans la commande réessayer"
@@ -68,12 +68,13 @@
             if (mediaRecorder && mediaRecorder.state === "recording") {
                 switchmicBut(true,micButton,micIcon,mediaRecorder);
             } else {
-                switchmicBut(false,micButton,micIcon,mediaRecorder);
+
                 // Start the recording
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 mediaRecorder = new MediaRecorder(stream);
                 audioChunks = [];
 
+                switchmicBut(false,micButton,micIcon,mediaRecorder);
                 // When data is available, push it to audioChunks
                 mediaRecorder.ondataavailable = event => {
                     audioChunks.push(event.data);
@@ -81,7 +82,7 @@
 
                 // When recording is stopped, send the audio file
                 mediaRecorder.onstop = async () => {
-                    const formData = getData(audioChunks)
+                    const formData = getAudioData(audioChunks)
                     // Send a POST request to your FastAPI server
                     const response = await fetch('http://localhost:8000/upload_audio', {
                         method: 'POST',
@@ -89,8 +90,9 @@
                     });
                     if (response.ok) {
                         console.log('Audio uploaded successfully!');
-                        console.log(await response.json())
-                        const transcript = response.json()["transcription"];
+                        const reponse = await response.json()
+                        const transcript = reponse["transcription"];
+                        console.log(transcript)
                         command = await getCommande(transcript)
                         trySwitch(command)
                     } else {

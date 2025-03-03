@@ -73,8 +73,8 @@ def formatMeteo(meteo):
     rowdict = meteoSel.iloc[0].to_dict()
     return rowdict
 
-@app.get("/meteo",response_class=HTMLResponse)
-def getMeteo(request: Request,day:int,month:int,latitude:float,longitude:float):
+@app.get("/meteo2",response_class=HTMLResponse)
+def getMeteo2(request: Request,day:int,month:int,latitude:float,longitude:float):
     print(f"Date : {day}/{month}")
     print(f"Loc : {latitude},{longitude}")
     date = dataParse.DateFormatCust({"day":day,"month":month})
@@ -85,7 +85,19 @@ def getMeteo(request: Request,day:int,month:int,latitude:float,longitude:float):
     return templates.TemplateResponse(
         request=request, name="resultMeteo.html" , context={"meteo":rowdict}
     )
-
+@app.get("/meteo",response_class=HTMLResponse)
+def getMeteo(request: Request,day:int,month:int,localisation):
+    print(f"Date : {day}/{month}")
+    print(f"Loc : {localisation}")
+    date = dataParse.DateFormatCust({"day":day,"month":month})
+    loc = dataParse.getLL(localisation)
+    meteo = meteorequest.GetMeteoDay(loc["latitude"],loc["longitude"],[date])
+    print(meteo[0])
+    print(meteo[0].to_dict())
+    rowdict = formatMeteo(meteo)
+    return templates.TemplateResponse(
+        request=request, name="resultMeteo.html" , context={"meteo":rowdict,"localisation":localisation}
+    )
 class RequestModel(BaseModel):
     text: str
 
@@ -95,7 +107,7 @@ def getNer(request: RequestModel):
     print(f"Ner to {text}")
     ner = NerTransform.GetInfoAll(text)
     print(f"NER done : {ner}")
-    retour = dataParse.parseAll(ner)
+    retour = dataParse.parseSimple(ner)
     if(retour["status"]!="Success"):
         pass
         #TODO pour monitoring

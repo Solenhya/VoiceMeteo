@@ -150,6 +150,8 @@ def parseSimple(info):
         dateOk=False
     if(len(info["loc"])>0):
         retour["loc"]=info["loc"][0]
+        toPrint = retour["loc"]
+        print(f"localisation Trouver {toPrint}")
     else:
         locOK=False
     if(locOK and dateOk):
