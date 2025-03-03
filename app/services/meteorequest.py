@@ -59,6 +59,11 @@ maxdays = 16
 def GetMeteoInfo(latitude,longitude):
     data = getMeteoDataDaily(latitude,longitude,listeDaily,days=maxdays)
     return data
+def GetMeteoSimple(latitude,longitude,day,month):
+    data = GetMeteoInfo(latitude,longitude)
+    data = pd.DataFrame(data)
+    retour = data[(data["days"]==day) and (data["months"]==month)]
+    return retour
 
 #Prend une latitude,longitude et une liste de date formater et renvoi une liste de dataframe qui correspondents
 def GetMeteoDay(latitude,longitude,days):
@@ -71,5 +76,3 @@ def GetMeteoDay(latitude,longitude,days):
         df_filtered = data[data.apply(lambda row: dateF.Correspond(row['days'], row['months']), axis=1)]
         retour.append(df_filtered)
     return retour
-
-    

@@ -46,19 +46,6 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-
-@app.get("/", response_class=HTMLResponse)
-async def accueil(request: Request):
-    return templates.TemplateResponse(
-        request=request, name="accueilVoc.html"
-    )
-
-@app.get("/Request",response_class=HTMLResponse)
-async def reponse(request: Request,text):
-    return templates.TemplateResponse(
-        request=request
-    )
-
 @app.get("/test")
 def read_root(x=None):
     '''
@@ -69,20 +56,35 @@ def read_root(x=None):
     '''
     return {"Hello": f"World, x={x}"}
 
-@app.get("/meteo")
-def getMeteo(longitude=0,latitude=0):
-    retour = meteorequest.GetMeteoDailySimple(latitude,longitude)
-    retour["weather_code"] = [ReplaceCode(x) for x in retour["weather_code"]]
-    print(f"Type :: {type(retour['precipitation_probability_mean'][0])}")
-    retour = json.dumps(retour,cls=NumpyArrayEncoder)
-    return retour
+@app.get("/", response_class=HTMLResponse)
+async def accueil(request: Request):
+    return templates.TemplateResponse(
+        request=request, name="accueilVoc.html"
+    )
 
+def formatMeteo(meteo):
+    meteoSel=meteo[0]
+    meteoSel["weather_code"]=meteoSel["weather_code"].apply(ReplaceCode)
+    meteoSel["days"] = meteoSel["days"].astype(str) + "/" + meteoSel["months"].astype(str)
+    meteoSel.drop(["months"],axis=1,inplace=True)
+    meteoSel["temperature_2m_max"]=meteoSel["temperature_2m_max"].apply(lambda x: round(x, 2))
+    meteoSel["temperature_2m_min"]=meteoSel["temperature_2m_min"].apply(lambda x: round(x, 2))
+    meteoSel.rename(columns={"days":"date","precipitation_probability_mean":"Probailité de précipitation","temperature_2m_min":"Temperature Minimum","temperature_2m_max":"Temperature Maximum","weather_code":"Code Météo"},inplace=True)
+    rowdict = meteoSel.iloc[0].to_dict()
+    return rowdict
 
-@app.get("/voice")
-def getVoice():
-    retour = voice.recognize_from_microphone()
-    #if retour pas bon
-    return retour
+@app.get("/meteo",response_class=HTMLResponse)
+def getMeteo(request: Request,day:int,month:int,latitude:float,longitude:float):
+    print(f"Date : {day}/{month}")
+    print(f"Loc : {latitude},{longitude}")
+    date = dataParse.DateFormatCust({"day":day,"month":month})
+    meteo = meteorequest.GetMeteoDay(latitude,longitude,[date])
+    print(meteo[0])
+    print(meteo[0].to_dict())
+    rowdict = formatMeteo(meteo)
+    return templates.TemplateResponse(
+        request=request, name="resultMeteo.html" , context={"meteo":rowdict}
+    )
 
 class RequestModel(BaseModel):
     text: str

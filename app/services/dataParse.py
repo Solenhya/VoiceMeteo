@@ -96,6 +96,7 @@ def parseSingleData(info):
 def TraiteLocalisation(info, retour):
     for entre in info["loc"]:
         ajout = getLL(entre)
+        retour["locName"].append(entre)
         if(ajout!=None):
             retour["loc"].append(ajout)
         else:
@@ -139,3 +140,24 @@ def parseAll(info):
         retour["status"]="ErDate" 
     return retour
 
+def parseSimple(info):
+    retour={"date":None,"loc":None,"status":""}
+    dateOk = True
+    locOK = True
+    retour["date"]=[]
+    TraiteDate(info, retour)
+    if(len(retour["date"])==0):
+        dateOk=False
+    if(len(info["loc"])>0):
+        retour["loc"]=info["loc"][0]
+    else:
+        locOK=False
+    if(locOK and dateOk):
+        retour["status"]="Success"
+    elif((not locOK) and (not dateOk)):
+        retour["status"]="ErDate/ErLoc"
+    elif(not locOK):
+        retour["status"]="ErLoc"
+    else:
+        retour["status"]="ErDate" 
+    return retour

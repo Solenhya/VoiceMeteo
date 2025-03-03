@@ -10,6 +10,7 @@
       const micButton = document.getElementById('micButton');
       const micIcon = document.getElementById('micIcon');
       const textButton = document.getElementById('textBut')
+      const textInfo = document.getElementById("textInfo")
       let mediaRecorder;
       let audioChunks = [];
   
@@ -21,7 +22,7 @@
         }else{
             mediaRecorder.start();
             micButton.style.color = 'white';
-            micIcon.style.color = 'red';  // Change button to stop
+            micIcon.style.color = 'red';
         }
     }
     function getAudioData(audChuns) {
@@ -41,22 +42,33 @@
             });
         const data =await response.json();
         console.log(data);  // Do something with the response data
-        console.log(data.status)
-        return data
+        console.log(data.date[0].firstDate);
+        return data;
     }
     async function trySwitch(data){
-        const status = data.status
+        const status = data.status;
         if(status=="Success"){
-            console.log("Success")
+            const firstDate = data.date[0].firstDate;
+            const day = firstDate.day;
+            const month = firstDate.month;
+            const latitude = data.loc[0].latitude;
+            const longitude = data.loc[0].longitude;
+            const url = `http://localhost:8000/meteo?day=${day}&month=${month}&longitude=${longitude}&latitude=${latitude}`;
+            window.location.href = url;
+        }else{
+            textInfo.innerHTML="Erreur dans la commande réessayer"
         }
     }
-    textButton.addEventListener('click',async () => getCommande("Meteo de Tours de jeudi s'il te"));
+    textButton.addEventListener('click',async () => {commande =await getCommande("Meteo de Tours de samedi s'il te plait");
+    trySwitch(commande);    
+    }
+    );
       // Start recording when mic button is clicked
       micButton.addEventListener('click', async () => {
             if (mediaRecorder && mediaRecorder.state === "recording") {
-                switchmicBut(true,micButton,micIcon,mediaRecorder)
+                switchmicBut(true,micButton,micIcon,mediaRecorder);
             } else {
-                switchmicBut(false,micButton,micIcon,mediaRecorder)
+                switchmicBut(false,micButton,micIcon,mediaRecorder);
                 // Start the recording
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 mediaRecorder = new MediaRecorder(stream);
@@ -79,7 +91,8 @@
                         console.log('Audio uploaded successfully!');
                         console.log(await response.json())
                         const transcript = response.json()["transcription"];
-                        getCommande(transcript)
+                        command = await getCommande(transcript)
+                        trySwitch(command)
                     } else {
                         console.error('Error uploading audio');
                     }
@@ -99,7 +112,7 @@
         <button id="micButton" class="btn btn-primary btn-circle btn-block rounded-circle mb-3"><i id="micIcon" class="fs-1 bi bi-mic micIcon"></i></button>
         
         <!-- Texte centré -->
-        <p>Cliquez et parlez.</p>
+        <p id="texteInfo">Cliquez et parlez.</p>
         <div class = "content">              
             <!-- Petit bouton rond centré en bas -->
             <button id="textBut" class="btn btn-success btn-circle btn-smaller">+</button>
