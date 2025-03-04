@@ -1,0 +1,5 @@
+SPEECH_KEY = Speech_key_azure
+SPEECH_REGION = region_azure
+HOST = base_de_donnée_monitoring
+USER = user_pour_db
+PASSWORD = password_db

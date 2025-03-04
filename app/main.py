@@ -2,6 +2,8 @@ import services.meteorequest as meteorequest
 import services.voice as voice
 import services.dataParse as dataParse
 import services.NerTransform as NerTransform
+import services.logMonitor as logMonitor
+
 from fastapi import FastAPI , File , UploadFile , Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -17,6 +19,8 @@ class NumpyArrayEncoder(JSONEncoder):
         if isinstance(obj, numpy.ndarray):
             return obj.tolist()
         return JSONEncoder.default(self, obj)
+
+databaseManager = logMonitor.DataBaseManag()
 
 def ReplaceCode(code):
     if(code<=29):
@@ -69,22 +73,12 @@ def formatMeteo(meteo):
     meteoSel.drop(["months"],axis=1,inplace=True)
     meteoSel["temperature_2m_max"]=meteoSel["temperature_2m_max"].apply(lambda x: round(x, 2))
     meteoSel["temperature_2m_min"]=meteoSel["temperature_2m_min"].apply(lambda x: round(x, 2))
-    meteoSel.rename(columns={"days":"date","precipitation_probability_mean":"Probailité de précipitation","temperature_2m_min":"Temperature Minimum","temperature_2m_max":"Temperature Maximum","weather_code":"Code Météo"},inplace=True)
+    meteoSel["precipitation_probability_mean"]=meteoSel["precipitation_probability_mean"].apply(lambda x:round(x,2))
+    meteoSel.rename(columns={"days":"date","precipitation_probability_mean":"Probabilité de précipitation","temperature_2m_min":"Temperature Minimum","temperature_2m_max":"Temperature Maximum","weather_code":"Code Météo"},inplace=True)
     rowdict = meteoSel.iloc[0].to_dict()
     return rowdict
 
-@app.get("/meteo2",response_class=HTMLResponse)
-def getMeteo2(request: Request,day:int,month:int,latitude:float,longitude:float):
-    print(f"Date : {day}/{month}")
-    print(f"Loc : {latitude},{longitude}")
-    date = dataParse.DateFormatCust({"day":day,"month":month})
-    meteo = meteorequest.GetMeteoDay(latitude,longitude,[date])
-    print(meteo[0])
-    print(meteo[0].to_dict())
-    rowdict = formatMeteo(meteo)
-    return templates.TemplateResponse(
-        request=request, name="resultMeteo.html" , context={"meteo":rowdict}
-    )
+
 @app.get("/meteo",response_class=HTMLResponse)
 def getMeteo(request: Request,day:int,month:int,localisation):
     print(f"Date : {day}/{month}")
@@ -95,6 +89,7 @@ def getMeteo(request: Request,day:int,month:int,localisation):
     print(meteo[0])
     print(meteo[0].to_dict())
     rowdict = formatMeteo(meteo)
+    databaseManager.logMeteo(rowdict)
     return templates.TemplateResponse(
         request=request, name="resultMeteo.html" , context={"meteo":rowdict,"localisation":localisation}
     )
@@ -108,44 +103,9 @@ def getNer(request: RequestModel):
     ner = NerTransform.GetInfoAll(text)
     print(f"NER done : {ner}")
     retour = dataParse.parseSimple(ner)
-    if(retour["status"]!="Success"):
-        pass
-        #TODO pour monitoring
+
+    databaseManager.logNer(retour)
     return retour
-
-#Une fonction pour creer la requete au service météo
-#@app.post("/meteoFromNer") Erreur avec le transfert en requete du resultat du ner
-
-def ExtractFirstMeteo(info):
-    print(info)
-    if(len(info["loc"])==0):
-        print("Erreur localisation")
-        return
-        #TODO monitoring
-    if(len(info["date"])==0):
-        print("Erreur date")
-        return
-        #TODO monitoring
-    #Choix du premier 
-    loc = info["loc"][0]
-    dates = info["date"][0]
-    meteoReq = meteorequest.GetMeteoDay(loc["latitude"],loc["longitude"],[dates])
-    if(len(meteoReq)==0):
-        print("Meteo vide")
-        return
-        ##TODO cas ou les date n'était pas correct
-    return meteoReq[0]
-
-@app.get("/predictA")
-def PredictAll(text):
-    ner = getNer(text)
-    if(ner==None):
-        #TODO gerer et monitorer l'erreur
-        return None
-    retour= ExtractFirstMeteo(ner)
-    retour["weather_code"]=retour["weather_code"].apply(ReplaceCode)
-    return retour.to_dict()
-
 
 
 #Essai fonction fastAPi qui a besoin de javascript pour fonctionner
@@ -157,7 +117,12 @@ async def upload_audio(file: UploadFile = File(...)):
         buffer.write(await file.read())
     ogg_version = AudioSegment.from_ogg("temp_file.ogg")
     ogg_version.export("temp_audio.wav", format="wav")
-    transcript = voice.recognize_from_file("temp_audio.wav")
-    print(transcript)
+    result =""
+    try:
+        transcript = voice.recognize_from_file("temp_audio.wav")
+        result = "OK"
+    except:
+        result = "Erreur"
+    databaseManager.LogTranscription(result,transcript)
     return {"transcription": transcript}
 

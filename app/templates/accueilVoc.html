@@ -1,7 +1,7 @@
 {% extends "baseTemplates.html" %}
 
 {% block title %}
-    Fab Weather
+    Accueil
 {% endblock %}
 
 {% block script %}
@@ -9,6 +9,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       const micButton = document.getElementById('micButton');
       const micIcon = document.getElementById('micIcon');
+      const textInput = document.getElementById('textInput')
       const textButton = document.getElementById('textBut')
       const textInfo = document.getElementById("texteInfo")
       let mediaRecorder;
@@ -57,7 +58,8 @@
             textInfo.innerHTML="Erreur dans la commande réessayer"
         }
     }
-    textButton.addEventListener('click',async () => {commande =await getCommande("Meteo de Tours dans deux jours s'il te plait");
+    textButton.addEventListener('click',async () => {text = textInput.value;
+        commande =await getCommande(text);
     trySwitch(commande);    
     }
     );
@@ -115,8 +117,8 @@
         <p id="texteInfo">Cliquez et parlez.</p>
         <div class = "content">              
             <!-- Petit bouton rond centré en bas -->
-             
-            <button id="textBut" class="btn btn-success btn-circle btn-smaller">Par defaut</button>
+            <input type="text" id="textInput" name="name">
+            <button id="textBut" class="btn btn-success btn-circle btn-smaller">Commande Manuel</button>
         </div>
     </div>
 </div>

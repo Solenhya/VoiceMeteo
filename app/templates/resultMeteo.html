@@ -1,7 +1,7 @@
 {% extends "baseTemplates.html" %}
 
 {% block title %}
-    Fab Weather 2
+    Prevision Meteo
 {% endblock %}
 
 {% block script %}
@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block main %}
-<button onclick="location.href='http://localhost:8000/'">Retour</button>
+<button onclick="location.href='http://localhost:8000/'" class="btn-success btn-circle btn-smaller">Retour</button>
 <div class="text-center">
     <h2>Meteo de {{localisation}}</h2>
 </div>
