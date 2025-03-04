@@ -10,7 +10,7 @@
       const micButton = document.getElementById('micButton');
       const micIcon = document.getElementById('micIcon');
       const textButton = document.getElementById('textBut')
-      const textInfo = document.getElementById("textInfo")
+      const textInfo = document.getElementById("texteInfo")
       let mediaRecorder;
       let audioChunks = [];
   
@@ -41,8 +41,6 @@
             body: JSON.stringify({ "text": transcript })  // Send text as JSON
             });
         const data =await response.json();
-        console.log(data);  // Do something with the response data
-        console.log(data.date[0].firstDate);
         return data;
     }
     async function trySwitch(data){
@@ -59,7 +57,7 @@
             textInfo.innerHTML="Erreur dans la commande réessayer"
         }
     }
-    textButton.addEventListener('click',async () => {commande =await getCommande("Meteo de Tours de samedi s'il te plait");
+    textButton.addEventListener('click',async () => {commande =await getCommande("Meteo de Tours dans deux jours s'il te plait");
     trySwitch(commande);    
     }
     );
@@ -117,7 +115,8 @@
         <p id="texteInfo">Cliquez et parlez.</p>
         <div class = "content">              
             <!-- Petit bouton rond centré en bas -->
-            <button id="textBut" class="btn btn-success btn-circle btn-smaller">+</button>
+             
+            <button id="textBut" class="btn btn-success btn-circle btn-smaller">Par defaut</button>
         </div>
     </div>
 </div>
