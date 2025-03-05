@@ -1,0 +1,30 @@
+{% extends "baseTemplates.html" %}
+
+{% block title %}
+    Prevision Meteo
+{% endblock %}
+
+{% block script %}
+<script></script>
+{% endblock %}
+
+{% block main %}
+<button onclick="location.href='http://localhost:8000/'" class="btn-success btn-circle btn-smaller">Retour</button>
+<div class="text-center">
+    <h2>Meteo de {{localisation}}</h2>
+</div>
+<div class="container">
+    <div class="row">
+      {% for key, value in meteo.items() %}
+        <div class="col">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">{{ key|replace('_', ' ')|title }}</h5>
+              <p class="card-text">{{ value }}</p>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}
